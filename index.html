@@ -55,10 +55,9 @@
         #ad-cover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 210; background: transparent; }
 
         .btn-group { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
-        .menu-btn { width: 260px; padding: 16px; font-size: 18px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; }
+        .menu-btn { width: 260px; padding: 18px; font-size: 20px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; }
         #start-btn { background: #4CAF50; color: white; box-shadow: 0 4px #2E7D32; }
         #start-btn:disabled { opacity: 0; pointer-events: none; }
-        #other-games-btn { background: #ff4081; color: white; box-shadow: 0 4px #c2185b; }
 
         /* 大広告画面 (300x250) */
         #bigAdScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; }
@@ -87,15 +86,15 @@
             <p id="menu-desc" style="margin:10px 0; color:#666; text-align:center; line-height: 1.4;">「文字の色」を素早く選べ！<br>意味に惑わされるな！<br><b>BEST: <span id="best-score">0</span></b></p>
             
             <div id="ad-middle-container">
-                <div id="ad-cover"></div> <div id="im-c9675ed8ad4d49f2b1360ac594aa00ca">
+                <div id="ad-cover"></div>
+                <div id="im-c9675ed8ad4d49f2b1360ac594aa00ca">
                     <script async src="https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104"></script>
                     <script>(window.adsbyimobile=window.adsbyimobile||[]).push({pid:84561,mid:590804,asid:1924211,type:"banner",display:"inline",elementid:"im-c9675ed8ad4d49f2b1360ac594aa00ca"})</script>
                 </div>
             </div>
 
-            <div class="btn-group" id="menu-btns">
+            <div class="btn-group">
                 <button id="start-btn" class="menu-btn" onclick="startGame()">★ START ★</button>
-                <a href="https://saaaachi.github.io/" class="menu-btn" id="other-games-btn">他のゲームはこちら</a>
             </div>
         </div>
 
@@ -178,17 +177,16 @@
             
             startBtn.disabled = true;
             adMid.style.display = "flex";
-            adCover.style.display = "block"; // 誤タップ防止ガード
+            adCover.style.display = "block";
             menuScreen.style.display = "flex";
 
-            // 1.5秒後にガード解除とボタン有効化
             setTimeout(() => {
                 adCover.style.display = "none";
                 startBtn.disabled = false;
                 startBtn.innerText = "★ RETRY ★";
             }, 1500);
 
-            // 【判定】2回目、7回目、12回目...に表示
+            // 2回目、7回目、12回目...に表示
             if (playCount === 2 || (playCount > 2 && (playCount - 2) % 5 === 0)) {
                 setTimeout(showBigAd, 400);
             }
@@ -196,7 +194,6 @@
 
         function showBigAd() {
             const screen = document.getElementById("bigAdScreen"), closeBtn = document.getElementById("ad-close-btn");
-            // リフレッシュを避けるため、srcセットは表示直前に行う
             document.getElementById("ad-large-frame").src = "ad.large.html";
             screen.style.display = "flex";
             
@@ -218,7 +215,7 @@
 
         function closeBigAd() { 
             document.getElementById("bigAdScreen").style.display = "none";
-            document.getElementById("ad-large-frame").src = ""; // 閉じた後はリソース解放
+            document.getElementById("ad-large-frame").src = ""; 
         }
     </script>
 </body>

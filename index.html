@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Color Brain - 脳トレ</title>
+    <style>
+        * { box-sizing: border-box; vertical-align: bottom; }
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #fdfdfd; font-family: 'Helvetica Neue', Arial, sans-serif; 
+            touch-action: none; position: fixed;
+        }
+        
+        /* 広告枠：上下100px固定 */
+        #ad-top, #ad-bottom { 
+            position: absolute; left: 0; width: 100%; height: 100px; 
+            background: #eee; z-index: 1000; display: flex; align-items: center; justify-content: center;
+        }
+        #ad-top { top: 0; }
+        #ad-bottom { bottom: 0; }
+        iframe { border: none; width: 320px; height: 100px; }
+
+        /* ゲームエリア */
+        #main-container {
+            position: absolute; top: 100px; bottom: 100px; left: 0; right: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #fff; z-index: 10;
+        }
+
+        #ui { position: absolute; top: 15px; font-size: 22px; font-weight: bold; color: #333; }
+        #question-text { font-size: 60px; font-weight: 900; margin-bottom: 40px; transition: transform 0.1s; }
+        
+        .choice-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; max-width: 400px; }
+        .choice-btn { 
+            height: 70px; border: none; border-radius: 15px; color: white; 
+            font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px rgba(0,0,0,0.1);
+        }
+
+        /* メニュー・ゲームオーバー画面 */
+        #menuScreen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.98); display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 200; padding: 10px;
+        }
+        
+        /* 中サイズ広告コンテナ */
+        #ad-middle-container { 
+            width: 320px; height: 100px; margin: 20px 0; display: none; 
+            justify-content: center; align-items: center; position: relative;
+        }
+        /* 誤タップ防止カバー */
+        #ad-cover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 210; background: transparent; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
+        .menu-btn { width: 260px; padding: 16px; font-size: 18px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; }
+        #start-btn { background: #4CAF50; color: white; box-shadow: 0 4px #2E7D32; }
+        #other-games-btn { background: #ff4081; color: white; box-shadow: 0 4px #c2185b; }
+
+        /* 大広告 */
+        #bigAdScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; }
+        .ad-frame-wrapper { width: 300px; height: 250px; position: relative; background: white; }
+        .ad-close-btn { position: absolute; top: -20px; right: -20px; color: white; font-size: 20px; font-weight: bold; cursor: pointer; background: #333; width: 40px; height: 40px; border-radius: 50%; display: none; align-items: center; justify-content: center; z-index: 3100; border: 2px solid white; }
+    </style>
+</head>
+<body>
+
+    <div id="ad-top"><iframe src="ad.html"></iframe></div>
+
+    <div id="main-container">
+        <div id="ui">TIME: 15.0 | SCORE: 0</div>
+        <div id="question-text">赤</div>
+        <div class="choice-container" id="choices"></div>
+
+        <div id="menuScreen">
+            <h1 id="menu-title" style="color:#333; margin:0; font-size: 28px;">COLOR BRAIN</h1>
+            <p id="menu-desc" style="margin:10px 0; color:#666; text-align:center;">「文字の色」を素早く選べ！<br>BEST: <span id="best-score">0</span></p>
+            
+            <div id="ad-middle-container">
+                <div id="ad-cover"></div> <div id="im-c9675ed8ad4d49f2b1360ac594aa00ca">
+                    <script async src="https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104"></script>
+                    <script>(window.adsbyimobile=window.adsbyimobile||[]).push({pid:84561,mid:590804,asid:1924211,type:"banner",display:"inline",elementid:"im-c9675ed8ad4d49f2b1360ac594aa00ca"})</script>
+                </div>
+            </div>
+
+            <div class="btn-group" id="menu-btns">
+                <button id="start-btn" class="menu-btn" onclick="startGame()">START</button>
+                <a href="https://saaaachi.github.io/" class="menu-btn" id="other-games-btn">他のゲームはこちら</a>
+            </div>
+        </div>
+
+        <div id="bigAdScreen">
+            <div class="ad-frame-wrapper">
+                <div id="ad-close-btn" class="ad-close-btn" onclick="closeBigAd()"></div>
+                <iframe id="ad-large-frame" src="" style="width:300px; height:250px;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
+
+    <script>
+        const colors = [
+            { name: "赤", code: "#f44336" },
+            { name: "青", code: "#2196f3" },
+            { name: "緑", code: "#4caf50" },
+            { name: "黄色", code: "#ffeb3b", dark: true }
+        ];
+
+        let score = 0, bestScore = localStorage.getItem("color_brain_best") || 0, playCount = 0;
+        let timeLeft = 15, timer, gameActive = false, correctCode = "";
+
+        const qText = document.getElementById("question-text"), ui = document.getElementById("ui"), menuScreen = document.getElementById("menuScreen"), adMid = document.getElementById("ad-middle-container"), adCover = document.getElementById("ad-cover"), startBtn = document.getElementById("start-btn");
+
+        document.getElementById("best-score").innerText = bestScore;
+
+        function startGame() {
+            menuScreen.style.display = "none"; adMid.style.display = "none";
+            score = 0; timeLeft = 15; gameActive = true;
+            nextQuestion();
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                ui.innerText = `TIME: ${Math.max(0, timeLeft).toFixed(1)} | SCORE: ${score}`;
+                if(timeLeft <= 0) gameOver();
+            }, 100);
+        }
+
+        function nextQuestion() {
+            const textIdx = Math.floor(Math.random() * colors.length);
+            const colorIdx = Math.floor(Math.random() * colors.length);
+            correctCode = colors[colorIdx].code;
+            
+            qText.innerText = colors[textIdx].name;
+            qText.style.color = correctCode;
+            
+            const choiceArea = document.getElementById("choices");
+            choiceArea.innerHTML = "";
+            [...colors].sort(() => Math.random() - 0.5).forEach(c => {
+                const btn = document.createElement("button");
+                btn.className = "choice-btn";
+                btn.style.backgroundColor = c.code;
+                btn.style.color = c.dark ? "#333" : "white";
+                btn.onclick = () => checkAnswer(c.code);
+                choiceArea.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(code) {
+            if(!gameActive) return;
+            if(code === correctCode) {
+                score++; timeLeft += 0.5; nextQuestion();
+            } else {
+                timeLeft -= 1.5;
+                qText.style.transform = "scale(1.2)";
+                setTimeout(() => qText.style.transform = "scale(1)", 100);
+            }
+        }
+
+        function gameOver() {
+            gameActive = false; clearInterval(timer); playCount++;
+            if(score > bestScore) { bestScore = score; localStorage.setItem("color_brain_best", bestScore); }
+            
+            document.getElementById("menu-title").innerText = "TIME UP!";
+            document.getElementById("menu-desc").innerHTML = `SCORE: ${score}<br>BEST: ${bestScore}`;
+            
+            // 収益化ロジック
+            startBtn.style.display = "none";
+            adMid.style.display = "flex";
+            adCover.style.display = "block"; // 誤タップ防止カバーON
+            menuScreen.style.display = "flex";
+
+            // 1.5秒後の処理
+            setTimeout(() => {
+                adCover.style.display = "none"; // 広告クリック解禁
+                startBtn.style.display = "block";
+                startBtn.innerText = "RETRY";
+            }, 1500);
+
+            // 大サイズ広告の表示判定
+            if(playCount === 1 || playCount === 2 || playCount % 5 === 0) {
+                setTimeout(showBigAd, 400);
+            }
+        }
+
+        function showBigAd() {
+            const screen = document.getElementById("bigAdScreen"), closeBtn = document.getElementById("ad-close-btn");
+            document.getElementById("ad-large-frame").src = "ad.large.html";
+            screen.style.display = "flex";
+            
+            let count = 5;
+            closeBtn.style.display = "flex";
+            closeBtn.innerText = count;
+            closeBtn.style.pointerEvents = "none";
+
+            const countInt = setInterval(() => {
+                count--;
+                closeBtn.innerText = count;
+                if(count <= 0) {
+                    clearInterval(countInt);
+                    closeBtn.innerText = "×";
+                    closeBtn.style.pointerEvents = "auto";
+                }
+            }, 1000);
+        }
+
+        function closeBigAd() { document.getElementById("bigAdScreen").style.display = "none"; }
+    </script>
+</body>
+</html>

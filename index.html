@@ -12,7 +12,6 @@
             touch-action: none; position: fixed;
         }
         
-        /* 広告枠：上下100px固定 */
         #ad-top, #ad-bottom { 
             position: absolute; left: 0; width: 100%; height: 100px; 
             background: #eee; z-index: 1000; display: flex; align-items: center; justify-content: center;
@@ -21,7 +20,6 @@
         #ad-bottom { bottom: 0; }
         iframe { border: none; width: 320px; height: 100px; }
 
-        /* ゲームエリア */
         #main-container {
             position: absolute; top: 100px; bottom: 100px; left: 0; right: 0;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -39,27 +37,24 @@
         }
         .choice-btn:active { transform: scale(0.95); }
 
-        /* メニュー・ゲームオーバー画面 */
         #menuScreen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(255,255,255,0.98); display: flex; flex-direction: column; 
             align-items: center; justify-content: center; z-index: 200; padding: 10px;
         }
         
-        /* 中サイズ広告コンテナ */
         #ad-middle-container { 
             width: 320px; height: 100px; margin: 20px 0; display: none; 
             justify-content: center; align-items: center; position: relative; border: 1px solid #ddd;
         }
-        /* 1.5秒ガード：誤タップ防止カバー */
         #ad-cover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 210; background: transparent; }
 
         .btn-group { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
         .menu-btn { width: 260px; padding: 18px; font-size: 20px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; }
         #start-btn { background: #4CAF50; color: white; box-shadow: 0 4px #2E7D32; }
         #start-btn:disabled { opacity: 0; pointer-events: none; }
+        #other-games-btn { background: #ff4081; color: white; box-shadow: 0 4px #c2185b; }
 
-        /* 大広告画面 (300x250) */
         #bigAdScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; }
         .ad-frame-wrapper { width: 300px; height: 250px; position: relative; background: white; border-radius: 8px; }
         .ad-close-btn { 
@@ -95,6 +90,7 @@
 
             <div class="btn-group">
                 <button id="start-btn" class="menu-btn" onclick="startGame()">★ START ★</button>
+                <a href="https://saaaachi.github.io/" class="menu-btn" id="other-games-btn">他のゲームはこちら</a>
             </div>
         </div>
 
@@ -109,114 +105,57 @@
     <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
 
     <script>
-        const colors = [
-            { name: "赤", code: "#f44336" },
-            { name: "青", code: "#2196f3" },
-            { name: "緑", code: "#4caf50" },
-            { name: "黄色", code: "#ffc107", dark: true }
-        ];
-
-        let score = 0, bestScore = localStorage.getItem("color_brain_best") || 0, playCount = 0;
-        let timeLeft = 15, timer, gameActive = false, correctCode = "";
-
-        const qText = document.getElementById("question-text"), ui = document.getElementById("ui"), menuScreen = document.getElementById("menuScreen"), adMid = document.getElementById("ad-middle-container"), adCover = document.getElementById("ad-cover"), startBtn = document.getElementById("start-btn"), bestUi = document.getElementById("best-score");
-
+        const colors = [{name:"赤",code:"#f44336"},{name:"青",code:"#2196f3"},{name:"緑",code:"#4caf50"},{name:"黄色",code:"#ffc107",dark:true}];
+        let score=0, bestScore=localStorage.getItem("color_brain_best")||0, playCount=0;
+        let timeLeft=15, timer, gameActive=false, correctCode="";
+        const qText=document.getElementById("question-text"), ui=document.getElementById("ui"), menuScreen=document.getElementById("menuScreen"), adMid=document.getElementById("ad-middle-container"), adCover=document.getElementById("ad-cover"), startBtn=document.getElementById("start-btn"), bestUi=document.getElementById("best-score"), otherGamesBtn=document.getElementById("other-games-btn");
         bestUi.innerText = bestScore;
 
         function startGame() {
-            menuScreen.style.display = "none"; adMid.style.display = "none";
-            score = 0; timeLeft = 15; gameActive = true;
+            menuScreen.style.display="none"; adMid.style.display="none";
+            score=0; timeLeft=15; gameActive=true;
             nextQuestion();
-            timer = setInterval(() => {
-                timeLeft -= 0.1;
-                ui.innerText = `TIME: ${Math.max(0, timeLeft).toFixed(1)} | SCORE: ${score}`;
-                if(timeLeft <= 0) gameOver();
-            }, 100);
+            timer = setInterval(()=>{ timeLeft-=0.1; ui.innerText=`TIME: ${Math.max(0,timeLeft).toFixed(1)} | SCORE: ${score}`; if(timeLeft<=0)gameOver(); },100);
         }
 
         function nextQuestion() {
-            const textIdx = Math.floor(Math.random() * colors.length);
-            let colorIdx;
-            do { colorIdx = Math.floor(Math.random() * colors.length); } while(colorIdx === textIdx);
-
-            correctCode = colors[colorIdx].code;
-            qText.innerText = colors[textIdx].name;
-            qText.style.color = correctCode;
-            
-            const choiceArea = document.getElementById("choices");
-            choiceArea.innerHTML = "";
-            
-            [...colors].sort(() => Math.random() - 0.5).forEach(c => {
-                const btn = document.createElement("button");
-                btn.className = "choice-btn";
-                btn.style.backgroundColor = c.code;
-                btn.onclick = () => checkAnswer(c.code);
-                choiceArea.appendChild(btn);
+            const textIdx=Math.floor(Math.random()*colors.length);
+            let colorIdx; do{colorIdx=Math.floor(Math.random()*colors.length);}while(colorIdx===textIdx);
+            correctCode=colors[colorIdx].code; qText.innerText=colors[textIdx].name; qText.style.color=correctCode;
+            const choiceArea=document.getElementById("choices"); choiceArea.innerHTML="";
+            [...colors].sort(()=>Math.random()-0.5).forEach(c=>{
+                const btn=document.createElement("button"); btn.className="choice-btn"; btn.style.backgroundColor=c.code; btn.onclick=()=>checkAnswer(c.code); choiceArea.appendChild(btn);
             });
         }
 
         function checkAnswer(code) {
-            if(!gameActive) return;
-            if(code === correctCode) {
-                score++; timeLeft += 0.6;
-                nextQuestion();
-            } else {
-                timeLeft -= 2.0;
-                qText.style.transform = "translateX(15px)";
-                setTimeout(() => qText.style.transform = "translateX(-15px)", 50);
-                setTimeout(() => qText.style.transform = "translateX(0)", 100);
-            }
+            if(!gameActive)return;
+            if(code===correctCode){ score++; timeLeft+=0.6; nextQuestion(); }
+            else{ timeLeft-=2.0; qText.style.transform="translateX(15px)"; setTimeout(()=>qText.style.transform="translateX(-15px)",50); setTimeout(()=>qText.style.transform="translateX(0)",100); }
         }
 
         function gameOver() {
-            gameActive = false; clearInterval(timer); playCount++;
-            if(score > bestScore) { bestScore = score; localStorage.setItem("color_brain_best", bestScore); bestUi.innerText = bestScore; }
+            gameActive=false; clearInterval(timer); playCount++;
+            if(score>bestScore){ bestScore=score; localStorage.setItem("color_brain_best",bestScore); bestUi.innerText=bestScore; }
+            document.getElementById("menu-title").innerText="TIME UP!";
+            document.getElementById("menu-desc").innerHTML=`SCORE: <span style="font-size:24px; color:#f44336;">${score}</span><br>BEST: ${bestScore}`;
             
-            document.getElementById("menu-title").innerText = "TIME UP!";
-            document.getElementById("menu-desc").innerHTML = `SCORE: <span style="font-size:24px; color:#f44336;">${score}</span><br>BEST: ${bestScore}`;
-            
-            startBtn.disabled = true;
-            adMid.style.display = "flex";
-            adCover.style.display = "block";
-            menuScreen.style.display = "flex";
+            startBtn.disabled=true;
+            otherGamesBtn.style.display="none"; // 2回目以降（ゲームオーバー後）は非表示
+            adMid.style.display="flex"; adCover.style.display="block"; menuScreen.style.display="flex";
 
-            setTimeout(() => {
-                adCover.style.display = "none";
-                startBtn.disabled = false;
-                startBtn.innerText = "★ RETRY ★";
-            }, 1500);
-
-            // 2回目、7回目、12回目...に表示
-            if (playCount === 2 || (playCount > 2 && (playCount - 2) % 5 === 0)) {
-                setTimeout(showBigAd, 400);
-            }
+            setTimeout(()=>{ adCover.style.display="none"; startBtn.disabled=false; startBtn.innerText="★ RETRY ★"; },1500);
+            if(playCount===2 || (playCount>2 && (playCount-2)%5===0)) setTimeout(showBigAd,400);
         }
 
-        function showBigAd() {
-            const screen = document.getElementById("bigAdScreen"), closeBtn = document.getElementById("ad-close-btn");
-            document.getElementById("ad-large-frame").src = "ad.large.html";
-            screen.style.display = "flex";
-            
-            let count = 5;
-            closeBtn.style.display = "flex";
-            closeBtn.innerText = count;
-            closeBtn.style.pointerEvents = "none";
-
-            const countInt = setInterval(() => {
-                count--;
-                closeBtn.innerText = count;
-                if(count <= 0) {
-                    clearInterval(countInt);
-                    closeBtn.innerText = "×";
-                    closeBtn.style.pointerEvents = "auto";
-                }
-            }, 1000);
+        function showBigAd(){
+            const screen=document.getElementById("bigAdScreen"), closeBtn=document.getElementById("ad-close-btn");
+            document.getElementById("ad-large-frame").src="ad.large.html";
+            screen.style.display="flex";
+            let count=5; closeBtn.style.display="flex"; closeBtn.innerText=count; closeBtn.style.pointerEvents="none";
+            const countInt=setInterval(()=>{ count--; closeBtn.innerText=count; if(count<=0){clearInterval(countInt); closeBtn.innerText="×"; closeBtn.style.pointerEvents="auto";} },1000);
         }
-
-        function closeBigAd() { 
-            document.getElementById("bigAdScreen").style.display = "none";
-            document.getElementById("ad-large-frame").src = ""; 
-        }
+        function closeBigAd(){ document.getElementById("bigAdScreen").style.display="none"; document.getElementById("ad-large-frame").src=""; }
     </script>
 </body>
 </html>
